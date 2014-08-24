@@ -1,49 +1,38 @@
-[![Build Status](https://travis-ci.org/troydavisson/PHRETS.svg?branch=2)](https://travis-ci.org/troydavisson/PHRETS)
+[![Latest Stable Version](https://poser.pugx.org/troydavisson/PHRETS/v/stable.png)](https://packagist.org/packages/troydavisson/PHRETS)
+[![Total Downloads](https://poser.pugx.org/troydavisson/PHRETS/downloads.png)](https://packagist.org/packages/troydavisson/PHRETS)
 
-PHRETS
-======
 
-PHP client library for interacting with a RETS server to pull real estate listings, photos and other data made available from an MLS system
+# PHRETS
 
-```php
-<?php
+A simple, free, open source PHP library for using [RETS](http://rets.org).
 
-date_default_timezone_set('America/New_York');
+PHP + RETS = PHRETS
 
-require_once("vendor/autoload.php");
 
-$log = new \Monolog\Logger('PHRETS');
-$log->pushHandler(new \Monolog\Handler\StreamHandler('php://stdout', \Monolog\Logger::DEBUG));
+## Introduction
 
-$config = new \PHRETS\Configuration;
-$config->setLoginUrl('rets login url here')
-        ->setUsername('rets username here')
-        ->setPassword('rets password here')
-        ->setRetsVersion('1.7.2');
+PHRETS provides PHP developers a way to integrate RETS functionality directly within new or existing code. A standard class of functions is made available to developers to connect and interact with a server much like they would with other APIs.
 
-$rets = new \PHRETS\Session($config);
-$rets->setLogger($log);
+PHRETS handles the following aspects of RETS communication for you:
+* Response parsing (for other non-XML responses such as HTTP multipart)
+* XML Parsing
+* Simple variables and arrays returned to the developer
+* RETS communication (over HTTP)
+* HTTP Header management
+* Authentication
+* Session/Cookie management
 
-$connect = $rets->Login();
 
-$system = $rets->GetSystemMetadata();
-var_dump($system);
+## Download
 
-$resources = $system->getResources();
-$classes = $resources->first()->getClasses();
-var_dump($classes);
+**Install via Composer** - Add [troydavisson/phrets](https://packagist.org/packages/troydavisson/phrets) to your `composer.json` file, run `composer update` and you're set.  
+**Manual Download** - The source code for PHRETS is available on [GitHub](http://github.com/troydavisson/PHRETS)
 
-$classes = $rets->GetClassesMetadata('Property');
-var_dump($classes->first());
 
-$objects = $rets->GetObject('Property', 'Photo', '00-1669', '*', 1);
-var_dump($objects);
+## Contribute
 
-$fields = $rets->GetTableMetadata('Property', 'A');
-var_dump($fields[0]);
+PHRETS is maintained in a public Git repository on GitHub.  Issue submissions and pull requests are encouraged if you run into issues or if you have fixes or changes to contribute.
 
-$results = $rets->Search('Property', 'A', '*', ['Limit' => 3, 'Select' => 'LIST_1,LIST_105,LIST_15,LIST_22,LIST_87,LIST_133,LIST_134']);
-foreach ($results as $r) {
-    var_dump($r);
-}
-```
+## Documentation
+
+View our [GitHub Wiki](https://github.com/troydavisson/PHRETS/wiki) for documentation, code snippets, examples, tips & tricks and more.
