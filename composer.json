@@ -1,21 +1,18 @@
 {
-    "name": "troydavisson/phrets",
-    "type": "library",
-    "description": "RETS library in PHP",
-    "keywords": ["rets", "mls"],
-    "homepage": "http://github.com/troydavisson/PHRETS",
-    "authors": [
-        {
-            "name": "Troy Davisson",
-            "email": "troy.davisson@gmail.com",
-            "homepage": "http://troda.com",
-            "role": "Developer"
-        }
-    ],
     "require": {
-        "php": ">=5.2.0"
+        "guzzlehttp/guzzle": "4.1.*",
+        "illuminate/container": "4.2.*",
+        "illuminate/support": "4.2.*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.1.*",
+        "psr/log": "1.*",
+        "monolog/monolog": "1.10.*",
+        "gsaulmon/guzzlerecorder": "dev-master"
     },
     "autoload": {
-        "classmap": ["phrets.php"]
+        "psr-4": {
+            "PHRETS\\": "src/"
+        }
     }
 }
