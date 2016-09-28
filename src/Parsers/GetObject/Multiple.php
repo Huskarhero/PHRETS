@@ -1,12 +1,15 @@
 <?php namespace PHRETS\Parsers\GetObject;
 
-use GuzzleHttp\Psr7\Response;
-use PHRETS\Http\Response as PHRETSResponse;
+use GuzzleHttp\Message\MessageParser;
+use GuzzleHttp\Message\Response;
+use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Stream\Stream;
 use Illuminate\Support\Collection;
+use PHRETS\Models\Object;
 
 class Multiple
 {
-    public function parse(PHRETSResponse $response)
+    public function parse(ResponseInterface $response)
     {
         $collection = new Collection;
 
@@ -23,11 +26,7 @@ class Multiple
             $boundary = $matches[1];
         } else {
             preg_match('/boundary\=(.*?)(\s|$|\;)/', $response->getHeader('Content-Type'), $matches);
-            if (isset($matches[1])) {
-                $boundary = $matches[1];
-            } else {
-                $boundary = null;
-            }
+            $boundary = $matches[1];
         }
         // strip quotes off of the boundary
         $boundary = preg_replace('/^\"(.*?)\"$/', '\1', $boundary);
@@ -44,15 +43,16 @@ class Multiple
         // take off anything after the last boundary (the epilogue)
         array_pop($multi_parts);
 
+        $message_parser = new MessageParser;
         $parser = new Single;
 
         // go through each part of the multipart message
         foreach ($multi_parts as $part) {
             // get Guzzle to parse this multipart section as if it's a whole HTTP message
-            $parts = \GuzzleHttp\Psr7\parse_response("HTTP/1.1 200 OK\r\n" . $part);
+            $parts = $message_parser->parseResponse("HTTP/1.1 200 OK\r\n" . $part);
 
             // now throw this single faked message through the Single GetObject response parser
-            $single = new PHRETSResponse(new Response($parts->getStatusCode(), $parts->getHeaders(), (string)$parts->getBody()));
+            $single = new Response($parts['code'], $parts['headers'], Stream::factory($parts['body']));
             $obj = $parser->parse($single);
 
             // add information about this multipart to the returned collection

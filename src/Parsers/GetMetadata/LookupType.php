@@ -1,12 +1,12 @@
 <?php namespace PHRETS\Parsers\GetMetadata;
 
-use PHRETS\Http\Response;
+use GuzzleHttp\Message\ResponseInterface;
 use Illuminate\Support\Collection;
 use PHRETS\Session;
 
 class LookupType extends Base
 {
-    public function parse(Session $rets, Response $response)
+    public function parse(Session $rets, ResponseInterface $response)
     {
         $xml = $response->xml();
 

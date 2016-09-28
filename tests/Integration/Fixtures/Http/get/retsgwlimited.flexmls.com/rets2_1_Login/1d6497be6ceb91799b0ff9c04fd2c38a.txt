@@ -18,8 +18,8 @@ Broker=UNKNOWN
 MetadataVersion=01.03.28598
 MetadataTimestamp=2014-07-08T20:10:20Z
 MinMetadataTimestamp=2014-07-08T20:10:20Z
-Login=/limited/rets2_1/Login
-Search=/limited/rets2_1/Search
-Logout=/limited/rets2_1/Logout
+Login=/rets2_1/Login
+Search=/rets2_1/Search
+Logout=/rets2_1/Logout
 </RETS-RESPONSE>
 </RETS>

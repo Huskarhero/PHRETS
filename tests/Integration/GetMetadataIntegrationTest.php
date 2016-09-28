@@ -85,12 +85,10 @@ class GetMetadataIntegrationTest extends BaseIntegration
         $this->assertInstanceOf('\PHRETS\Models\Metadata\Resource', $resources['Property']);
     }
 
-    /**
-     * @test
-     * @expectedException \PHRETS\Exceptions\MetadataNotFound
-     * **/
+    /** @test **/
     public function it_errors_with_bad_resource_name()
     {
+        $this->setExpectedException('PHRETS\\Exceptions\\MetadataNotFound');
         $this->session->GetResourcesMetadata('Bogus');
     }
 
@@ -224,7 +222,7 @@ class GetMetadataIntegrationTest extends BaseIntegration
     public function it_recovers_from_bad_lookuptype_tag()
     {
         $config = new \PHRETS\Configuration;
-        $config->setLoginUrl('http://retsgw.flexmls.com/lookup/rets2_1/Login')
+        $config->setLoginUrl('http://retsgwlookup.flexmls.com/rets2_1/Login')
                 ->setUsername(getenv('PHRETS_TESTING_USERNAME'))
                 ->setPassword(getenv('PHRETS_TESTING_PASSWORD'))
                 ->setRetsVersion('1.5');
@@ -232,7 +230,7 @@ class GetMetadataIntegrationTest extends BaseIntegration
         $session = new \PHRETS\Session($config);
         $session->Login();
 
-        $values = $session->GetLookupValues('Property', '20000426151013376279000000');
+        $values = $this->session->GetLookupValues('Property', '20000426151013376279000000');
         $this->assertCount(6, $values);
     }
 }

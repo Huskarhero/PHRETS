@@ -1,12 +1,12 @@
 <?php namespace PHRETS\Parsers\GetMetadata;
 
-use PHRETS\Http\Response;
+use GuzzleHttp\Message\ResponseInterface;
 use Illuminate\Support\Collection;
 use PHRETS\Session;
 
 class Object extends Base
 {
-    public function parse(Session $rets, Response $response)
+    public function parse(Session $rets, ResponseInterface $response)
     {
         $xml = $response->xml();
 
@@ -16,7 +16,6 @@ class Object extends Base
             foreach ($xml->METADATA->{'METADATA-OBJECT'}->Object as $key => $value) {
                 $metadata = new \PHRETS\Models\Metadata\Object;
                 $metadata->setSession($rets);
-                /** @var \PHRETS\Models\Metadata\Object $obj */
                 $obj = $this->loadFromXml($metadata, $value, $xml->METADATA->{'METADATA-OBJECT'});
                 $collection->put($obj->getObjectType(), $obj);
             }
