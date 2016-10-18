@@ -85,12 +85,10 @@ class RETSVersionTest extends PHPUnit_Framework_TestCase {
         $this->assertTrue($v->isAtLeast('1.7.2'));
     }
 
-    /**
-     * @test
-     * @expectedException \PHRETS\Exceptions\InvalidRETSVersion
-     * **/
+    /** @test **/
     public function it_fails_bad_versions()
     {
+        $this->setExpectedException('PHRETS\\Exceptions\\InvalidRETSVersion', "RETS version '2.0' given is not understood");
         $v = new RETSVersion;
         $v->setVersion('2.0');
     }

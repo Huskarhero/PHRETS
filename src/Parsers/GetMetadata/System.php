@@ -1,11 +1,11 @@
 <?php namespace PHRETS\Parsers\GetMetadata;
 
-use PHRETS\Http\Response;
+use GuzzleHttp\Message\ResponseInterface;
 use PHRETS\Session;
 
 class System extends Base
 {
-    public function parse(Session $rets, Response $response)
+    public function parse(Session $rets, ResponseInterface $response)
     {
         $xml = $response->xml();
         $base = $xml->METADATA->{'METADATA-SYSTEM'};

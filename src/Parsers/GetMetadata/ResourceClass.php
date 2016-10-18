@@ -1,12 +1,12 @@
 <?php namespace PHRETS\Parsers\GetMetadata;
 
-use PHRETS\Http\Response;
+use GuzzleHttp\Message\ResponseInterface;
 use Illuminate\Support\Collection;
 use PHRETS\Session;
 
 class ResourceClass extends Base
 {
-    public function parse(Session $rets, Response $response)
+    public function parse(Session $rets, ResponseInterface $response)
     {
         $xml = $response->xml();
 
@@ -16,7 +16,6 @@ class ResourceClass extends Base
             foreach ($xml->METADATA->{'METADATA-CLASS'}->Class as $key => $value) {
                 $metadata = new \PHRETS\Models\Metadata\ResourceClass;
                 $metadata->setSession($rets);
-                /** @var \PHRETS\Models\Metadata\ResourceClass $obj */
                 $obj = $this->loadFromXml($metadata, $value, $xml->METADATA->{'METADATA-CLASS'});
                 $collection->put($obj->getClassName(), $obj);
             }

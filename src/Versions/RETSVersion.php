@@ -121,14 +121,6 @@ class RETSVersion
     {
         return $this->isAtLeast(self::VERSION_1_8);
     }
-    
-    /**
-     * @return array
-     */
-    public function getValidVersions()
-    {
-        return $this->valid_versions;
-    }
 
     /**
      * @return string
