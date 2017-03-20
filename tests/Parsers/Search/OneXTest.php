@@ -1,7 +1,7 @@
 <?php
 
-use GuzzleHttp\Psr7\Response;
-use PHRETS\Http\Response as PHRETSResponse;
+use GuzzleHttp\Message\Response;
+use GuzzleHttp\Stream\Stream;
 use PHRETS\Configuration;
 use PHRETS\Parsers\Search\OneX;
 use PHRETS\Session;
@@ -37,7 +37,7 @@ class OneXTest extends PHPUnit_Framework_TestCase
         $c->setLoginUrl('http://www.reso.org/login');
 
         $s = new Session($c);
-        $this->results = $parser->parse($s, new PHRETSResponse(new Response(200, [], $data)), $parameters);
+        $this->results = $parser->parse($s, new Response(200, [], Stream::factory($data)), $parameters);
     }
 
     /** @test **/

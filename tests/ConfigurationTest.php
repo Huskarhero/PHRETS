@@ -31,13 +31,11 @@ class ConfigurationTest extends PHPUnit_Framework_TestCase {
         $this->assertSame('pass', $config->getPassword());
     }
 
-    /**
-     * @test
-     * @expectedException \PHRETS\Exceptions\InvalidConfiguration
-     **/
+    /** @test **/
     public function it_complains_about_bad_config()
     {
-        Configuration::load();
+        $this->setExpectedException('PHRETS\\Exceptions\\InvalidConfiguration', "Login URL and Username must be provided");
+        $config = Configuration::load();
     }
 
     /** @test **/
@@ -122,13 +120,14 @@ class ConfigurationTest extends PHPUnit_Framework_TestCase {
         $this->assertSame(Configuration::AUTH_DIGEST, $c->getHttpAuthenticationMethod());
     }
 
-    /**
-     * @test
-     * @expectedException InvalidArgumentException
-     **/
+    /** @test **/
     public function it_doesnt_allow_bogus_auth_methods()
     {
         $c = new Configuration;
+        $this->setExpectedException(
+            '\\InvalidArgumentException',
+            "Given authentication method is invalid.  Must be 'basic' or 'digest'"
+        );
         $c->setHttpAuthenticationMethod('bogus');
     }
 

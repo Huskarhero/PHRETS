@@ -1,7 +1,6 @@
 <?php namespace PHRETS\Http;
 
 use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\ClientInterface;
 
 class Client
 {
@@ -10,16 +9,16 @@ class Client
     /**
      * @return GuzzleClient
      */
-    public static function make($options = [])
+    public static function make()
     {
         if (!self::$client) {
-            self::$client = new GuzzleClient($options);
+            self::$client = new GuzzleClient;
         }
 
         return self::$client;
     }
 
-    public static function set(ClientInterface $client)
+    public static function set(GuzzleClient $client)
     {
         self::$client = $client;
     }

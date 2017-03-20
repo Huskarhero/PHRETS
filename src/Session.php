@@ -12,7 +12,6 @@ use PHRETS\Http\Client as PHRETSClient;
 use PHRETS\Interpreters\GetObject;
 use PHRETS\Interpreters\Search;
 use PHRETS\Models\Bulletin;
-use Psr\Http\Message\ResponseInterface;
 
 class Session
 {
@@ -27,7 +26,7 @@ class Session
     protected $rets_session_id;
     protected $cookie_jar;
     protected $last_request_url;
-    /** @var ResponseInterface */
+    /** @var \GuzzleHttp\Message\ResponseInterface */
     protected $last_response;
 
     public function __construct(Configuration $configuration)
@@ -35,12 +34,34 @@ class Session
         // save the configuration along with this session
         $this->configuration = $configuration;
 
-        $defaults = [];
-
         // start up our Guzzle HTTP client
-        $this->client = PHRETSClient::make($defaults);
+        $this->client = PHRETSClient::make();
 
         $this->cookie_jar = new CookieJar;
+
+        // set the authentication as defaults to use for the entire client
+        $this->client->setDefaultOption(
+                'auth',
+                [
+                        $configuration->getUsername(),
+                        $configuration->getPassword(),
+                        $configuration->getHttpAuthenticationMethod()
+                ]
+        );
+        $this->client->setDefaultOption(
+                'headers',
+                [
+                    'User-Agent' => $configuration->getUserAgent(),
+                    'RETS-Version' => $configuration->getRetsVersion()->asHeader(),
+                    'Accept-Encoding' => 'gzip',
+                    'Accept' => '*/*',
+                ]
+        );
+
+        // disable following 'Location' header (redirects) automatically
+        if ($this->configuration->readOption('disable_follow_location')) {
+            $this->client->setDefaultOption('allow_redirects', false);
+        }
 
         // start up the Capabilities tracker and add Login as the first one
         $this->capabilities = new Capabilities;
@@ -72,8 +93,7 @@ class Session
         $response = $this->request('Login');
 
         $parser = $this->grab('parser.login');
-        $xml = new \SimpleXMLElement((string)$response->getBody());
-        $parser->parse($xml->{'RETS-RESPONSE'}->__toString());
+        $parser->parse($response->xml()->{'RETS-RESPONSE'}->__toString());
 
         foreach ($parser->getCapabilities() as $k => $v) {
             $this->capabilities->add($k, $v);
@@ -161,7 +181,6 @@ class Session
 
         if ($resource_id) {
             foreach ($result as $r) {
-                /** @var \PHRETS\Models\Metadata\Resource $r */
                 if ($r->getResourceID() == $resource_id) {
                     return $r;
                 }
@@ -300,7 +319,7 @@ class Session
      * @param array $options
      * @throws Exceptions\CapabilityUnavailable
      * @throws Exceptions\RETSException
-     * @return ResponseInterface
+     * @return \GuzzleHttp\Message\ResponseInterface
      */
     protected function request($capability, $options = [])
     {
@@ -310,13 +329,20 @@ class Session
             throw new CapabilityUnavailable("'{$capability}' tried but no valid endpoint was found.  Did you forget to Login()?");
         }
 
-        $options = array_merge($this->getDefaultOptions(), $options);
+        if (!array_key_exists('headers', $options)) {
+            $options['headers'] = [];
+        }
+
+        // Guzzle 5 changed the order that headers are added to the request, so we'll do this manually
+        $options['headers'] = array_merge($this->client->getDefaultOption('headers'), $options['headers']);
 
         // user-agent authentication
         if ($this->configuration->getUserAgentPassword()) {
             $ua_digest = $this->configuration->userAgentDigestHash($this);
             $options['headers'] = array_merge($options['headers'], ['RETS-UA-Authorization' => 'Digest ' . $ua_digest]);
         }
+
+        $options = array_merge($options, ['cookies' => $this->cookie_jar]);
 
         $this->debug("Sending HTTP Request for {$url} ({$capability})", $options);
 
@@ -326,35 +352,30 @@ class Session
             $this->last_request_url = $url;
         }
 
-        /** @var ResponseInterface $response */
+        /** @var \GuzzleHttp\Message\ResponseInterface $response */
         if ($this->configuration->readOption('use_post_method')) {
             $this->debug('Using POST method per use_post_method option');
             $query = (array_key_exists('query', $options)) ? $options['query'] : null;
-            $response = $this->client->request('POST', $url, array_merge($options, ['form_params' => $query]));
+            $response = $this->client->post($url, array_merge($options, ['body' => $query]));
         } else {
-            $response = $this->client->request('GET', $url, $options);
+            $response = $this->client->get($url, $options);
         }
-
-        $response = new \PHRETS\Http\Response($response);
 
         $this->last_response = $response;
 
-        if ($response->getHeader('Set-Cookie')) {
-            $cookie = $response->getHeader('Set-Cookie');
-            if ($cookie) {
-                if (preg_match('/RETS-Session-ID\=(.*?)(\;|\s+|$)/', $cookie, $matches)) {
-                    $this->rets_session_id = $matches[1];
-                }
+        $cookie = $response->getHeader('Set-Cookie');
+        if ($cookie) {
+            if (preg_match('/RETS-Session-ID\=(.*?)(\;|\s+|$)/', $cookie, $matches)) {
+                $this->rets_session_id = $matches[1];
             }
         }
-        
-        if (preg_match('/text\/xml/', $response->getHeader('Content-Type')) and $capability != 'GetObject') {
+
+        if ($response->getHeader('Content-Type') == 'text/xml' and $capability != 'GetObject') {
             $xml = $response->xml();
             if ($xml and isset($xml['ReplyCode'])) {
                 $rc = (string)$xml['ReplyCode'];
                 // 20201 - No records found - not exception worthy in my mind
-                // 20403 - No objects found - not exception worthy in my mind
-                if ($rc != "0" and $rc != "20201" and $rc != "20403") {
+                if ($rc != "0" and $rc != "20201") {
                     throw new RETSException($xml['ReplyText'], (int)$xml['ReplyCode']);
                 }
             }
@@ -421,6 +442,14 @@ class Session
     }
 
     /**
+     * @return \GuzzleHttp\Event\EmitterInterface
+     */
+    public function getEventEmitter()
+    {
+        return $this->client->getEmitter();
+    }
+
+    /**
      * @return string
      */
     public function getLastRequestURL()
@@ -459,33 +488,5 @@ class Session
     protected function grab($component)
     {
         return $this->configuration->getStrategy()->provide($component);
-    }
-
-    /**
-     * @return array
-     */
-    public function getDefaultOptions()
-    {
-        $defaults = [
-            'auth' => [
-                $this->configuration->getUsername(),
-                $this->configuration->getPassword(),
-                $this->configuration->getHttpAuthenticationMethod()
-            ],
-            'headers' => [
-                'User-Agent' => $this->configuration->getUserAgent(),
-                'RETS-Version' => $this->configuration->getRetsVersion()->asHeader(),
-                'Accept-Encoding' => 'gzip',
-                'Accept' => '*/*',
-            ],
-            'curl' => [ CURLOPT_COOKIEFILE => tempnam('/tmp', 'phrets') ]
-        ];
-
-        // disable following 'Location' header (redirects) automatically
-        if ($this->configuration->readOption('disable_follow_location')) {
-            $defaults['allow_redirects'] = false;
-        }
-
-        return $defaults;
     }
 }

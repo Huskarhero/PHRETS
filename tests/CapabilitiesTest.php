@@ -14,12 +14,10 @@ class CapabilitiesTest extends PHPUnit_Framework_TestCase {
         $this->assertNull($cpb->get('test'));
     }
 
-    /**
-     * @test
-     * @expectedException InvalidArgumentException
-     * **/
+    /** @test **/
     public function it_barfs_when_not_given_enough_information_to_build_absolute_urls()
     {
+        $this->setExpectedException('InvalidArgumentException');
         $cpb = new Capabilities;
         $cpb->add('Login', '/rets/Login');
     }
