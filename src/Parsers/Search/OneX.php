@@ -83,20 +83,15 @@ class OneX
     protected function getColumnNames(Session $rets, &$xml, $parameters)
     {
         $delim = $this->getDelimiter($rets, $xml, $parameters);
-        $delimLength = strlen($delim);
 
         // break out and track the column names in the response
         $column_names = "{$xml->COLUMNS[0]}";
 
-        // Take out the first delimiter
-        if (substr($column_names, 0, $delimLength) == $delim) {
-            $column_names = substr($column_names, $delimLength);
-        }
+        // take out the first delimiter
+        $column_names = preg_replace("/^{$delim}/", "", $column_names);
 
-        // Take out the last delimiter
-        if (substr($column_names, -$delimLength) == $delim) {
-            $column_names = substr($column_names, 0, -$delimLength);
-        }
+        // take out the last delimiter
+        $column_names = preg_replace("/{$delim}\$/", "", $column_names);
 
         // parse and return the rest
         return explode($delim, $column_names);
@@ -114,21 +109,13 @@ class OneX
     protected function parseRecordFromLine(Session $rets, &$xml, $parameters, &$line, Results $rs)
     {
         $delim = $this->getDelimiter($rets, $xml, $parameters);
-        $delimLength = strlen($delim);
 
         $r = new Record;
-        $field_data = (string) $line;
+        $field_data = (string)$line;
 
-        // Take out the first delimiter
-        if (substr($field_data, 0, $delimLength) == $delim) {
-            $field_data = substr($field_data, $delimLength);
-        }
-
-        // Take out the last delimiter
-        if (substr($field_data, -$delimLength) == $delim) {
-            $field_data = substr($field_data, 0, -$delimLength);
-        }
-
+        // split up DATA row on delimiter found earlier
+        $field_data = preg_replace("/^{$delim}/", "", $field_data);
+        $field_data = preg_replace("/{$delim}\$/", "", $field_data);
         $field_data = explode($delim, $field_data);
 
         foreach ($rs->getHeaders() as $key => $name) {

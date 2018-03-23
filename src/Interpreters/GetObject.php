@@ -30,9 +30,9 @@ class GetObject
     protected static function split($value, $dash_ranges = true)
     {
         if (!is_array($value)) {
-            if (stripos($value, ':') !== false) {
+            if (preg_match('/\:/', $value)) {
                 $value = array_map('trim', explode(':', $value));
-            } elseif (stripos($value, ',') !== false) {
+            } elseif (preg_match('/\,/', $value)) {
                 $value = array_map('trim', explode(',', $value));
             } elseif ($dash_ranges and preg_match('/(\d+)\-(\d+)/', $value, $matches)) {
                 $value = range($matches[1], $matches[2]);

@@ -13,6 +13,7 @@ use PHRETS\Exceptions\RETSException;
 use PHRETS\Http\Client as PHRETSClient;
 use PHRETS\Interpreters\GetObject;
 use PHRETS\Interpreters\Search;
+use PHRETS\Models\BaseObject;
 use PHRETS\Models\Bulletin;
 use PHRETS\Strategies\Strategy;
 use Psr\Http\Message\ResponseInterface;
@@ -111,7 +112,7 @@ class Session
      * @param $content_ids
      * @param string $object_ids
      * @param int $location
-     * @return Collection
+     * @return Collection|BaseObject[]
      * @throws Exceptions\CapabilityUnavailable
      */
     public function GetObject($resource, $type, $content_ids, $object_ids = '*', $location = 0)
@@ -130,7 +131,7 @@ class Session
             ]
         );
 
-        if (stripos($response->getHeader('Content-Type'), 'multipart') !== false) {
+        if (preg_match('/multipart/', $response->getHeader('Content-Type'))) {
             $parser = $this->grab(Strategy::PARSER_OBJECT_MULTIPLE);
             $collection = $parser->parse($response);
         } else {
@@ -387,7 +388,7 @@ class Session
 
         $this->debug('Response: HTTP ' . $response->getStatusCode());
 
-        if (stripos($response->getHeader('Content-Type'), 'text/xml') !== false and $capability != 'GetObject') {
+        if (preg_match('/text\/xml/', $response->getHeader('Content-Type')) and $capability != 'GetObject') {
             $parser = $this->grab(Strategy::PARSER_XML);
             $xml = $parser->parse($response);
 

@@ -28,7 +28,6 @@ class BaseIntegration extends PHPUnit_Framework_TestCase
 
         $watcher = new Gsaulmon\GuzzleRecorder\GuzzleRecorder(__DIR__ . '/Fixtures/Http');
         $watcher->addIgnoredHeader('Accept');
-        $watcher->addIgnoredHeader('User-Agent');
         $watcher->addIgnoredHeader('Cookie');
 
         $watcher->attach_to($new_client);
